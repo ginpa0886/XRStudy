@@ -7,6 +7,7 @@ public class bullet : MonoBehaviour
 
     Rigidbody rigid;
     public float _speed;
+    public float _destoryTime;
 
     void Awake()
     {
@@ -18,13 +19,23 @@ public class bullet : MonoBehaviour
     {
         transform.position = trans.position;
         rigid.AddForce(dir * _speed, ForceMode.Impulse);
+
+        if(this != null)
+        {
+            Invoke("BulletDestory", _destoryTime);
+        }
     }
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag == "enemy")
         {
             Debug.Log("enemy hit!");
-            Destroy(this.gameObject);
+            BulletDestory();
         }
+    }
+
+    void BulletDestory()
+    {
+        gameObject.SetActive(false);
     }
 }

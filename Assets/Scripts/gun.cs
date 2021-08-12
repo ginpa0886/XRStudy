@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class gun : MonoBehaviour
 {
@@ -13,6 +14,12 @@ public class gun : MonoBehaviour
 
     [Header("== Bullet ==")]
     public GameObject m_bullet;
+
+    [SerializeField] Text m_BulletCount;
+    [SerializeField] Image m_ReloadCenter;
+    public int m_totalBullet;
+
+    public int m_curBullet;
     Animator m_animator;
 
     [Header("== Camera ==")]
@@ -22,6 +29,8 @@ public class gun : MonoBehaviour
     {
         m_mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraController>();
         m_animator = GetComponent<Animator>();
+
+        m_curBullet = 10;
     }
 
     // Update is called once per frame
@@ -34,9 +43,43 @@ public class gun : MonoBehaviour
 
     public void Fire()  // 총알 생성 및 발사 함수
     {
-        bullet _bullet = Instantiate(m_bullet).GetComponent<bullet>();
+        if(m_curBullet == 0) { return; }
+        m_curBullet--;
+        m_BulletCount.text = m_totalBullet.ToString() + " / " + m_curBullet.ToString();
+
+        if(m_curBullet == 0)    // 현재 총알이 0개 라면
+        {
+            Reload();
+            return;
+        }
+
+        m_animator.SetTrigger("fired");
+        //bullet _bullet = Instantiate(m_bullet).GetComponent<bullet>();
+        // object manager에서 총알을 불러와서 생성함
+        bullet _bullet = ObjectManager.Instance.GetPoolObject("bullet").GetComponent<bullet>();
         _bullet.Fire(m_dir, m_firePos);
 
+        
+
         m_mainCamera.GunRebound();
+    }
+
+    void Reload()
+    {
+        Debug.Log("장전!");
+        m_ReloadCenter.fillAmount = 0;
+        m_ReloadCenter.gameObject.SetActive(true);
+        StartCoroutine(reload());
+    }
+
+    IEnumerator reload()
+    {
+        while (m_ReloadCenter.fillAmount != 1)
+        {
+            yield return new WaitForEndOfFrame();
+            m_ReloadCenter.fillAmount += 0.02f;
+        }
+        m_curBullet = 10;
+        m_ReloadCenter.gameObject.SetActive(false);
     }
 }
